@@ -1,13 +1,10 @@
-## Generated mta.yaml based on template version 0.4.0
-## appName = punchout
-## language=nodejs; multitenant=false
-## approuter=
 _schema-version: '3.1'
 ID: punchout
 version: 1.0.0
 description: "A simple CAP project."
 parameters:
   enable-parallel-deployments: true
+  deploy_mode: html5-repo
    
 build-parameters:
   before-all:
@@ -15,6 +12,8 @@ build-parameters:
      commands:
       - npm install --production
       - npx -p @sap/cds-dk cds build --production
+      - npm --prefix ./app install ./app
+      - npm run build --prefix ./app
 
 modules:
  # --------------------- SERVER MODULE ------------------------
@@ -36,7 +35,64 @@ modules:
       commands:
         - cp ../../.cdsrc.json .
 
+  # --------------------- HTML5DEPLOYER MODULE -----------------
+ - name: punchout-hmtl5-deployer
+    # ------------------------------------------------------------
+   type: com.sap.html5.application-content
+   path: html5Deployer
+   requires:
+     - name: punchout-html5-host
+   build-parameters:
+     requires:
+       - name: punchout-html5-app
+         artifacts:
+           - './*'
+         target-path: resources/app
+
+  # --------------------- FRONTEND APP MODULE ---------------------
+ - name: punchout-html5-app
+    # ------------------------------------------------------------
+   type: html5
+   path: app
+   build-parameters:
+     supported-platforms: []
+     build-result: dist/app
+
+  # --------------------- APPROUTER MODULE ---------------------
+ - name: punchout-approuter
+   type: approuter.nodejs
+   path: approuter
+   requires:
+     - name: punchout-html5-runtime
+     - name: uaa_punchout
+     - name: srv-api
+       group: destinations
+       properties:
+         name: srv-api
+         url: ~{srv-url}
+         forwardAuthToken: true
+
 resources:
+  # --------------------- HTML5 Runtime ----------------------
+ - name: punchout-html5-runtime
+    # ------------------------------------------------------------
+   parameters:
+     service-name: punchout-html5-runtime
+     service-plan: app-runtime
+     service: html5-apps-repo
+   type: org.cloudfoundry.managed-service
+
+  # --------------------- HTML5 Host -------------------------
+ - name: punchout-html5-host
+   # ------------------------------------------------------------
+   parameters:
+     service-name: punchout-html5-host
+     service-plan: app-host
+     service: html5-apps-repo
+     config:
+       sizeLimit: 8
+   type: org.cloudfoundry.managed-service
+
  - name: uaa_punchout
    type: org.cloudfoundry.managed-service
    parameters:
@@ -44,5 +100,4 @@ resources:
      service: xsuaa
      service-name: punchout-xsuaa-service
      service-plan: application
-
 

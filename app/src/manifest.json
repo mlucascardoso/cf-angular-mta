@@ -1,0 +1,8 @@
+{
+    "sap.app": {
+        "id": "punchout",
+        "applicationVersion": {
+            "version": "1.0.0"
+        }
+    }
+}
