@@ -1,0 +1,48 @@
+## Generated mta.yaml based on template version 0.4.0
+## appName = punchout
+## language=nodejs; multitenant=false
+## approuter=
+_schema-version: '3.1'
+ID: punchout
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+   
+build-parameters:
+  before-all:
+   - builder: custom
+     commands:
+      - npm install --production
+      - npx -p @sap/cds-dk cds build --production
+
+modules:
+ # --------------------- SERVER MODULE ------------------------
+ - name: punchout-srv
+ # ------------------------------------------------------------
+   type: nodejs
+   path: gen/srv
+   parameters:
+     buildpack: nodejs_buildpack
+   requires:
+    # Resources extracted from CAP configuration
+    - name: uaa_punchout
+   provides:
+    - name: srv-api      # required by consumers of CAP services (e.g. approuter)
+      properties:
+        srv-url: ${default-url}
+   build-parameters:
+      builder: custom
+      commands:
+        - cp ../../.cdsrc.json .
+
+resources:
+ - name: uaa_punchout
+   type: org.cloudfoundry.managed-service
+   parameters:
+     path: ./xs-security.json
+     service: xsuaa
+     service-name: punchout-xsuaa-service
+     service-plan: application
+
+

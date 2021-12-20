@@ -1,0 +1,16 @@
+{
+    "build": {
+        "target": "gen"
+    },
+    "features": {
+        "assert_integrity": false
+    },
+    "requires": {
+        "db": {
+            "kind": "sqlite"
+        },
+        "uaa": {
+            "kind": "xsuaa"
+        }
+    }
+}
